@@ -5,6 +5,7 @@ read -p "Enter the namespace name: " NAMESPACE
 read -p "Enter the database name: " DB_NAME
 read -p "Enter the PostgreSQL user: " PGSQL_USER
 read -sp "Enter the PostgreSQL password: " PGSQL_PASSWORD
+echo
 
 # Create the deployment YAML content
 echo | kubectl apply -f - << EOF
@@ -75,8 +76,20 @@ spec:
       - name: postgres-storage
         persistentVolumeClaim:
           claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: $NAMESPACE
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
 EOF
-
 
 # Wait for the deployment to be ready
 kubectl rollout status deployment/postgres -n $NAMESPACE
