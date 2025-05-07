@@ -110,9 +110,3 @@ kubectl delete namespace <your-namespace>
 - PostgreSQL image used: `postgres:14`
 - You can change the version or modify the SQL logic as needed
 - The table creation and inserts are re-run each time you execute the script
-
----
-
-## 📬 Contributing
-
-Pull requests welcome! Feel free to open issues for bugs or suggestions.
