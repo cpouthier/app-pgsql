@@ -1,10 +1,14 @@
 #!/bin/bash
 
 # Prompt the user for input
-read -p "Enter the namespace name: " NAMESPACE
-read -p "Enter the database name: " DB_NAME
-read -p "Enter the PostgreSQL user: " PGSQL_USER
-read -sp "Enter the PostgreSQL password: " PGSQL_PASSWORD
+echo "Enter the namespace name: "
+read NAMESPACE
+echo "Enter the database name: "
+read DB_NAME
+echo "Enter the PostgreSQL user: "
+read PGSQL_USER
+echo "Enter the PostgreSQL password: "
+read -s PGSQL_PASSWORD
 echo
 
 # Create the deployment YAML content
@@ -101,19 +105,20 @@ POD_NAME=$(kubectl get pods -n $NAMESPACE -l app=postgres -o jsonpath="{.items[0
 kubectl exec -it $POD_NAME -n $NAMESPACE -- sh -c 'until pg_isready -h localhost -U $POSTGRES_USER; do echo waiting for postgres; sleep 2; done'
 
 # Create the table if it does not exist
-kubectl exec -it $POD_NAME -n $NAMESPACE -- psql -U $PGSQL_USER -d $DB_NAME -c "CREATE TABLE IF NOT EXISTS my_table (column1 TEXT, column2 TEXT);"
+#kubectl exec -it $POD_NAME -n $NAMESPACE -- psql -U $PGSQL_USER -d $DB_NAME -c "CREATE TABLE IF NOT EXISTS my_table (column1 TEXT, column2 TEXT);"
 
-# Insert 10 random values into the table
-for i in {1..10}
-do
-  RANDOM_VALUE1=$(openssl rand -hex 8)
-  RANDOM_VALUE2=$(openssl rand -hex 8)
-  kubectl exec -it $POD_NAME -n $NAMESPACE -- psql -U $PGSQL_USER -d $DB_NAME -c "INSERT INTO my_table (column1, column2) VALUES ('$RANDOM_VALUE1', '$RANDOM_VALUE2');"
+# Create the table if it does not exist and insert 10 random values
+for i in {1..10}; do
+  kubectl exec -it $POD_NAME -n $NAMESPACE -- sh -c "
+    psql -U $PGSQL_USER -d $DB_NAME -c \"CREATE TABLE IF NOT EXISTS my_table (column1 TEXT, column2 TEXT);\"
+    RANDOM_VALUE1=\$(openssl rand -hex 8)
+    RANDOM_VALUE2=\$(openssl rand -hex 8)
+    psql -U $PGSQL_USER -d $DB_NAME -c \"INSERT INTO my_table (column1, column2) VALUES ('\$RANDOM_VALUE1', '\$RANDOM_VALUE2');\"
+"
 done
-
+echo ""
 echo "Inserted 10 random values into $DB_NAME.my_table"
-
+echo ""
 # Show the values in the table
 kubectl exec -it $POD_NAME -n $NAMESPACE -- psql -U $PGSQL_USER -d $DB_NAME -c "SELECT * FROM my_table;"
 
-echo "Displayed values from $DB_NAME.my_table"
