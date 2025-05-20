@@ -11,6 +11,16 @@ echo "Enter the PostgreSQL password: "
 read -s PGSQL_PASSWORD
 echo
 
+# Save the credentials to pgsqlcredentials.txt
+cat << EOF > pgsqlcredentials.txt
+NAMESPACE=$NAMESPACE
+DB_NAME=$DB_NAME
+PGSQL_USER=$PGSQL_USER
+PGSQL_PASSWORD=$PGSQL_PASSWORD
+EOF
+echo ""
+echo "Credentials saved to pgsqlcredentials.txt"
+sleep 2
 # Create the deployment YAML content
 echo | kubectl apply -f - << EOF
 apiVersion: v1
